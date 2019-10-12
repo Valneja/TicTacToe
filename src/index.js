@@ -8,6 +8,9 @@ function Square(props) {
     color: 'black'
   };
   if (props.isWinningSquare) {
+    style.color = 'green';
+  }
+  if (props.gameOver) {
     style.color = 'red';
   }
   return (
@@ -27,6 +30,7 @@ class Board extends React.Component {
       <Square
         value={this.props.squares[i]}
         isWinningSquare={this.props.isWinningSquare[i]}
+        gameOver={this.props.gameOver}
         onClick={() => this.props.onClick(i)}
         key={i}
       />
@@ -59,6 +63,7 @@ class Game extends React.Component {
         squares: Array(9).fill(null),
         isWinningSquare: Array(9).fill(false),
         lastPosition: null,
+        gameOver: false,
       }],
       stepNumber: 0,
       xIsNext: true,
@@ -85,15 +90,30 @@ class Game extends React.Component {
       isWinningSquare[calculate['combination'][2]] = true;
     }
 
+    const isGameOver = this.checkIfGameOver(squares, calculate['winner']);
+
     this.setState({
       history: history.concat([{
         squares: squares,
         isWinningSquare: isWinningSquare,
         lastPosition: i,
+        gameOver: isGameOver,
       }]),
       stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
     });
+  }
+
+  checkIfGameOver(squares, winner) {
+    if (winner) {
+      return false;
+    }
+    for (let i = 0; i < squares.length; i++) {
+      if (squares[i] === null) {
+        return false;
+      }
+    }
+    return true;
   }
 
   jumpTo(step) {
@@ -146,13 +166,17 @@ class Game extends React.Component {
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
+    if (current.gameOver) {
+      status = "It's draw";
+    }
     return (
       <div className="game">
         <div className="game-board">
           <Board
             squares = {current.squares}
             isWinningSquare = {current.isWinningSquare}
-            onClick={(i) => this.handleClick(i)}
+            gameOver = {current.gameOver}
+            onClick = {(i) => this.handleClick(i)}
           />
 
         </div>
